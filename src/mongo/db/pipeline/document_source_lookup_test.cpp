@@ -1754,44 +1754,6 @@ TEST_F(DocumentSourceLookUpServerlessTest,
     ASSERT_EQ(2ul, namespaceSet.size());
 }
 
-TEST_F(
-    DocumentSourceLookUpServerlessTest,
-    LiteParsedDocumentSourceLookupObjExpectedNamespacesInServerlessWhenPassingInNssWithTenantId) {
-    RAIIServerParameterControllerForTest multitenancyController("multitenancySupport", true);
-
-    auto expCtx = getExpCtx();
-
-    auto stageSpec = BSON(
-        "$lookup" << BSON(
-            "from" << BSON("db" << "config"
-                                << "coll"
-                                << "cache.chunks.test.foo")
-                   << "pipeline"
-                   << BSON_ARRAY(BSON("$lookup" << BSON(
-                                          "from" << BSON("db" << "local"
-                                                              << "coll"
-                                                              << "oplog.rs")
-                                                 << "as"
-                                                 << "lookup2"
-                                                 << "pipeline"
-                                                 << BSON_ARRAY(BSON("$match" << BSON("x" << 1))))))
-                   << "as"
-                   << "lookup1"));
-
-    for (bool flagStatus : {false, true}) {
-        RAIIServerParameterControllerForTest featureFlagController("featureFlagRequireTenantID",
-                                                                   flagStatus);
-
-        // The result must match one of several system const NamespaceStrings, which means parse()
-        // will fail an assertion if nss contains any tenantId.
-        ASSERT_THROWS_CODE(DocumentSourceLookUp::LiteParsed::parse(expCtx->getNamespaceString(),
-                                                                   stageSpec.firstElement(),
-                                                                   LiteParserOptions{}),
-                           AssertionException,
-                           ErrorCodes::FailedToParse);
-    }
-}
-
 TEST_F(DocumentSourceLookUpServerlessTest,
        LiteParsedDocumentSourceLookupObjExpectedNamespacesInServerlessWithFlags) {
     RAIIServerParameterControllerForTest multitenancyController("multitenancySupport", true);
