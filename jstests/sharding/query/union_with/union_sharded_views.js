@@ -61,6 +61,10 @@ assert.eq(
     sourceUnsharded.aggregate([{$unionWith: sourceSharded.getName()}]).itcount(),
     shardedData.length + unshardedData.length,
 );
+assert.eq(
+    sourceUnsharded.aggregate([{$unionWith: {db: 'fdb', coll: fdbSourceSharded.getName()}}]).itcount(),
+    shardedData.length + unshardedData.length,
+);
 
 // Now create an identity view on top of each collection and expect to get the same results.
 const identityUnsharded = db.identity_unsharded;
@@ -87,6 +91,10 @@ assert.eq(
 );
 assert.eq(
     identityUnsharded.aggregate([{$unionWith: identitySharded.getName()}]).itcount(),
+    shardedData.length + unshardedData.length,
+);
+assert.eq(
+    identityUnsharded.aggregate([{$unionWith: {db: 'fdb', coll:  fdbIdentitySharded.getName()}}]).itcount(),
     shardedData.length + unshardedData.length,
 );
 
